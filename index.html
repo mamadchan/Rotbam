@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تخمین رتبه و میانگین وزنی · ارشد روانشناسی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* پالت رنگی جدید: آبی اقیانوسی، فیروزه‌ای و لاجوردی */
+  --bg: #040814;
+  --s1: #0a1122;
+  --s2: #101931;
+  --s3: #162445;
+  --b0: rgba(255,255,255,.04);
+  --b1: rgba(255,255,255,.08);
+  --b2: rgba(255,255,255,.14);
+  
+  --v1: #0284c7; /* Cyan Dark */
+  --v2: #0369a1; 
+  --v3: #0ea5e9; /* Primary Cyan */
+  --v4: #38bdf8;
+  --v5: #bae6fd;
+  
+  --ind: #2563eb; /* Royal Blue */
+  --sky: #0ea5e9;
+  --gold: #f59e0b;
+  --gld2: #fbbf24;
+  --gld3: #fde68a;
+  --grn: #059669;
+  --grn2: #10b981;
+  --grn3: #34d399;
+  --red: #dc2626;
+  --red2: #ef4444;
+  --red3: #fca5a5;
+  
+  --t1: #f0f9ff;
+  --t2: #94a3b8;
+  --t3: #64748b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:'Vazirmatn', sans-serif; background:var(--bg); color:var(--t1); min-height:100vh; overflow-x:hidden; }
+
+/* ══ BACKGROUND ══ */
+.bg-root { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.bg-noise {
+  position:absolute; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  opacity:.4;
+}
+.bg-grad {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 900px 600px at 75% -5%, rgba(2, 132, 199, .12) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at -5% 85%, rgba(37, 99, 235, .08) 0%, transparent 60%),
+    radial-gradient(ellipse 400px 400px at 50% 105%, rgba(14, 165, 233, .06) 0%, transparent 70%);
+}
+.bg-mesh {
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(14, 165, 233, .03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, .03) 1px, transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 85% 70% at 50% 30%, black 30%, transparent 100%);
+}
+.orb { position:absolute; border-radius:50%; filter:blur(110px); animation:orb 10s ease-in-out infinite alternate; }
+.orb1 { width:520px; height:520px; background:rgba(14, 165, 233, .1); top:-160px; right:-120px; animation-delay:0s; }
+.orb2 { width:380px; height:380px; background:rgba(37, 99, 235, .08); bottom:-80px; left:-60px; animation-delay:-3s; }
+.orb3 { width:260px; height:260px; background:rgba(2, 132, 199, .09); top:55%; left:42%; animation-delay:-6s; }
+@keyframes orb { from { transform:translate(0,0) scale(1); } to { transform:translate(18px,-24px) scale(1.07); } }
+
+/* ══ WRAP ══ */
+.wrap { position:relative; z-index:1; max-width:860px; margin:0 auto; padding:1.5rem 1.25rem 8rem; }
+
+/* ══ HEADER ══ */
+.hdr { text-align:center; padding:3.5rem 0 2.8rem; position:relative; }
+.hdr-badge {
+  display:inline-flex; align-items:center; gap:.45rem;
+  background:linear-gradient(135deg, rgba(14, 165, 233, .15), rgba(37, 99, 235, .1));
+  border:1px solid rgba(14, 165, 233, .25);
+  border-radius:2rem; padding:.35rem 1rem;
+  font-size:.72rem; color:var(--v5); margin-bottom:1.4rem;
+  letter-spacing:.06em; font-weight:700;
+  box-shadow:0 0 20px rgba(14, 165, 233, .12);
+}
+.hdr h1 { font-size:clamp(2rem,5vw,3.1rem); font-weight:900; line-height:1.15; letter-spacing:-.025em; margin-bottom:1rem; }
+.hdr h1 .line1 { display:block; color:var(--t1); }
+.hdr h1 .line2 {
+  display:block;
+  background:linear-gradient(125deg, #fff 10%, var(--v4) 45%, var(--v3) 80%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.hdr p { font-size:.87rem; color:var(--t2); line-height:2; font-weight:300; max-width:480px; margin:0 auto; }
+
+/* ══ STEPS ══ */
+.steps { display:flex; align-items:center; justify-content:center; margin:0 0 2.2rem; gap:0; }
+.sw-wrap { display:flex; flex-direction:column; align-items:center; }
+.sw-circle {
+  width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.9rem; font-weight:800;
+  border:2px solid var(--b1); color:var(--t3); background:var(--s1);
+  transition:all .4s cubic-bezier(.34,1.56,.64,1); position:relative;
+}
+.sw-wrap.active .sw-circle {
+  border-color:var(--v3); color:#fff; background:var(--v3);
+  box-shadow:0 0 0 6px rgba(14, 165, 233, .1), 0 0 28px rgba(14, 165, 233, .38);
+}
+.sw-wrap.done .sw-circle { border-color:var(--grn2); color:var(--grn2); background:rgba(16,185,129,.1); }
+.sw-lbl { font-size:.64rem; color:var(--t3); margin-top:.34rem; white-space:nowrap; transition:color .3s; }
+.sw-wrap.active .sw-lbl { color:var(--v4); }
+.sw-wrap.done .sw-lbl { color:var(--grn3); }
+.s-line { width:80px; height:2px; background:var(--b1); margin:0 .5rem .9rem; flex-shrink:0; transition:background .4s; }
+.s-line.done { background:linear-gradient(90deg, var(--grn), var(--grn3)); }
+
+/* ══ SECTION ══ */
+.sec {
+  background:var(--s1); border:1px solid var(--b1); border-radius:1.5rem;
+  padding:1.7rem; margin-bottom:1.1rem;
+  animation:pop .4s cubic-bezier(.16,1,.3,1);
+}
+@keyframes pop { from { opacity:0; transform:translateY(18px) scale(.975); } to { opacity:1; transform:translateY(0) scale(1); } }
+.sec-ttl {
+  font-size:.75rem; font-weight:800; color:var(--t3); letter-spacing:.12em;
+  margin-bottom:1.4rem; display:flex; align-items:center; gap:.5rem;
+}
+.sec-ttl::before { content:''; display:block; width:4px; height:14px; border-radius:2px; background:linear-gradient(var(--v3), var(--ind)); flex-shrink:0; }
+
+/* ══ ORIENTATIONS ══ */
+.ogrid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1rem; }
+.obtn {
+  background:var(--s2); border:1.5px solid var(--b0);
+  border-radius:1rem; padding:1.5rem;
+  cursor:pointer; transition:all .22s cubic-bezier(.4,0,.2,1); text-align:center;
+}
+.obtn:hover { border-color:rgba(14, 165, 233, .3); background:rgba(14, 165, 233, .05); transform:translateY(-3px); }
+.obtn.sel { border-color:var(--v3); background:rgba(14, 165, 233, .08); box-shadow:0 6px 24px rgba(14, 165, 233, .15); transform:translateY(-3px); }
+.o-code { font-size:.75rem; color:var(--t3); font-weight:800; letter-spacing:.07em; margin-bottom:.5rem; }
+.o-name { font-size:1.1rem; font-weight:800; color:var(--t1); line-height:1.45; }
+.obtn.sel .o-name { color:var(--v5); }
+
+/* ══ MODE TOGGLE ══ */
+.mtog {
+  display:inline-flex; background:var(--s2);
+  border:1px solid var(--b1); border-radius:.75rem; padding:3px; margin-bottom:1.25rem;
+}
+.mb {
+  padding:.44rem 1.05rem; border-radius:.58rem; cursor:pointer;
+  font-size:.77rem; font-weight:700; color:var(--t3);
+  transition:all .22s; border:none; background:transparent; font-family:inherit;
+}
+.mb.on {
+  background:linear-gradient(135deg, var(--v2), var(--ind));
+  color:#fff; box-shadow:0 3px 14px rgba(14, 165, 233, .38);
+}
+.note-box {
+  background:rgba(245,158,11,.065); border:1px solid rgba(245,158,11,.18);
+  border-radius:.75rem; padding:.65rem 1.1rem; font-size:.77rem; color:var(--gld2);
+  margin-bottom:1.2rem; line-height:1.65;
+}
+
+/* ══ SUBJECT CARD ══ */
+.slist { display:flex; flex-direction:column; gap:.85rem; }
+.subj {
+  position:relative; overflow:hidden;
+  background:var(--s2); border:1.5px solid var(--b0);
+  border-radius:1.1rem; padding:1.15rem 1.25rem;
+  transition:border-color .2s, transform .15s, box-shadow .2s;
+}
+.subj:hover { border-color:var(--b2); transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,0,0,.25); }
+.subj::before {
+  content:''; position:absolute; right:0; top:0; bottom:0;
+  width:4px; border-radius:0 1.1rem 1.1rem 0;
+}
+.subj[data-w="3"]::before { background:linear-gradient(180deg, var(--gold), var(--gld3)); }
+.subj[data-w="2"]::before { background:linear-gradient(180deg, var(--v2), var(--v4)); }
+.subj[data-w="1"]::before { background:linear-gradient(180deg, var(--sky), #7dd3fc); }
+
+.shead { display:flex; align-items:center; justify-content:space-between; margin-bottom:.9rem; gap:.5rem; flex-wrap:wrap; }
+.sname { font-size:.88rem; font-weight:700; line-height:1.45; color:var(--t1); }
+.wbadge {
+  display:inline-flex; align-items:center; gap:.28rem;
+  font-size:.7rem; font-weight:800; padding:.22rem .7rem; border-radius:2rem; flex-shrink:0;
+}
+.subj[data-w="3"] .wbadge { background:rgba(245,158,11,.13); color:var(--gld2); border:1px solid rgba(245,158,11,.18); }
+.subj[data-w="2"] .wbadge { background:rgba(14,165,233,.13); color:var(--v5); border:1px solid rgba(14,165,233,.18); }
+.subj[data-w="1"] .wbadge { background:rgba(37,99,235,.12); color:#7dd3fc; border:1px solid rgba(37,99,235,.16); }
+
+/* percent input */
+.pctwrap { position:relative; max-width:200px; }
+.pctwrap input {
+  width:100%; background:var(--s1); border:1.5px solid var(--b1);
+  border-radius:.65rem; padding:.6rem 2.2rem .6rem 2.4rem;
+  font-size:.92rem; font-family:inherit; color:var(--t1);
+  outline:none; transition:border-color .2s, box-shadow .2s; direction:ltr; text-align:center;
+}
+.pctwrap input:focus { border-color:var(--v3); box-shadow:0 0 0 3px rgba(14, 165, 233, .13); }
+.pctsym { position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:var(--t3); font-size:.8rem; pointer-events:none; }
+
+/* count grid */
+.cgrid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:.45rem; }
+.cfield { display:flex; flex-direction:column; gap:.28rem; }
+.clabel { font-size:.65rem; color:var(--t3); font-weight:800; text-align:center; letter-spacing:.02em; }
+.cfield input {
+  width:100%; background:var(--s1); border:1.5px solid var(--b1);
+  border-radius:.58rem; padding:.5rem .35rem;
+  font-size:.85rem; font-family:inherit; color:var(--t1);
+  outline:none; transition:border-color .2s, box-shadow .2s; text-align:center; direction:ltr;
+}
+.cfield.cv input:focus { border-color:var(--grn2); box-shadow:0 0 0 3px rgba(16,185,129,.1); }
+.cfield.cw input:focus { border-color:var(--red2); box-shadow:0 0 0 3px rgba(239,68,68,.1); }
+.ctot input { opacity:.38; cursor:default; font-size:.78rem; }
+
+/* ══ CALC BTN ══ */
+.cbwrap { text-align:center; margin-top:2rem; }
+.cbtn {
+  display:inline-flex; align-items:center; gap:.75rem;
+  background:linear-gradient(135deg, var(--v1) 0%, var(--ind) 100%);
+  border:none; border-radius:1.1rem; padding:1rem 3rem;
+  font-size:1.05rem; font-weight:800; color:#fff; cursor:pointer;
+  font-family:inherit; letter-spacing:.02em;
+  box-shadow:0 10px 36px rgba(14, 165, 233, .46), inset 0 1px 0 rgba(255,255,255,.16);
+  transition:all .28s cubic-bezier(.4,0,.2,1); position:relative; overflow:hidden;
+}
+.cbtn::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,.14), transparent 60%);
+  opacity:0; transition:opacity .2s;
+}
+.cbtn:hover { transform:translateY(-3px); box-shadow:0 18px 48px rgba(14, 165, 233, .6); }
+.cbtn:active { transform:translateY(-1px); }
+
+/* ══ RESULT SECTION ══ */
+#result { display:none; animation:pop .5s cubic-bezier(.16,1,.3,1); }
+
+.r-hero {
+  position:relative; overflow:hidden;
+  border-radius:1.6rem; padding:2.8rem 2rem; text-align:center; margin-bottom:1rem;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(14, 165, 233, .16), transparent 65%),
+    linear-gradient(160deg, rgba(14, 165, 233, .1), rgba(37, 99, 235, .07));
+  border:1px solid rgba(14, 165, 233, .2);
+}
+.r-hero::after {
+  content:''; position:absolute; bottom:0; left:12%; right:12%; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(14, 165, 233, .55), transparent);
+}
+.r-label { font-size:.85rem; color:var(--t2); font-weight:700; margin-bottom:.6rem; }
+.r-num {
+  font-size:5.5rem; font-weight:900; line-height:1; letter-spacing:-.04em;
+  background:linear-gradient(130deg, #fff 20%, var(--v5) 55%, var(--v3) 85%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:.4rem;
+}
+.r-unit { font-size:1.05rem; color:var(--t2); font-weight:500; }
+.r-meta {
+  display:inline-flex; align-items:center; gap:.5rem;
+  margin-top:1.2rem; background:rgba(255,255,255,.04);
+  border:1px solid var(--b1); border-radius:.7rem;
+  padding:.55rem 1.2rem; font-size:.85rem; color:var(--t2);
+}
+.r-meta strong { color:var(--v5); }
+
+/* Rank Box */
+.rank-box {
+  background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25);
+  border-radius:1.3rem; padding:1.5rem; text-align:center; margin-bottom:1.5rem;
+  box-shadow: 0 8px 30px rgba(245,158,11,0.1);
+}
+.rank-box .rk-lbl { font-size:1rem; font-weight:700; color:var(--gld2); margin-bottom:0.5rem; }
+.rank-box .rk-val { font-size:2.5rem; font-weight:900; color:#fff; letter-spacing:-0.02em; }
+.rank-box .rk-sub { font-size:0.75rem; color:var(--gld3); margin-top:0.5rem; opacity:0.8; }
+.rank-box.na { background:rgba(255,255,255,0.03); border-color:var(--b1); }
+.rank-box.na .rk-lbl { color:var(--t3); }
+.rank-box.na .rk-val { font-size:1.2rem; color:var(--t2); margin-top:0.5rem; }
+
+/* table */
+.tbl { background:var(--s1); border:1px solid var(--b1); border-radius:1.3rem; overflow:hidden; margin-bottom:1rem; }
+.tblh {
+  display:grid; grid-template-columns:2.6fr .75fr 1fr 1fr;
+  padding:.8rem 1.25rem; background:rgba(255,255,255,.022); border-bottom:1px solid var(--b0);
+  font-size:.7rem; color:var(--t3); font-weight:800;
+}
+.trow {
+  display:grid; grid-template-columns:2.6fr .75fr 1fr 1fr;
+  padding:1rem 1.25rem; border-bottom:1px solid var(--b0);
+  font-size:.85rem; align-items:center; transition:background .15s;
+}
+.trow:last-child { border-bottom:none; }
+.trow:hover { background:rgba(255,255,255,.022); }
+.pill {
+  display:inline-flex; justify-content:center; align-items:center;
+  padding:.25rem .6rem; border-radius:.5rem; font-weight:800; font-size:.8rem;
+}
+.pill.hi { color:var(--grn3); background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.16); }
+.pill.md { color:var(--gld2); background:rgba(245,158,11,.11); border:1px solid rgba(245,158,11,.15); }
+.pill.lo { color:var(--red3); background:rgba(220,38,38,.1); border:1px solid rgba(220,38,38,.14); }
+.pill.ng { color:var(--red3); background:rgba(220,38,38,.1); border:1px solid rgba(220,38,38,.14); }
+.c-t { text-align:center; }
+.contrib { color:var(--t3); font-size:.8rem; text-align:center; }
+
+.rbtn {
+  display:inline-flex; align-items:center; gap:.5rem;
+  background:transparent; border:1px solid var(--b1);
+  border-radius:.8rem; padding:.7rem 1.8rem;
+  font-size:.9rem; font-weight:700; color:var(--t3); cursor:pointer;
+  font-family:inherit; transition:all .22s; margin-top:1.25rem;
+}
+.rbtn:hover { border-color:var(--v3); color:var(--v5); }
+.hidden { display:none!important; }
+.tc { text-align:center; }
+
+@media(max-width:600px) {
+  .ogrid, .cgrid { grid-template-columns:1fr; }
+  .tblh, .trow { grid-template-columns:1.8fr .6fr .9fr .9fr; font-size:.7rem; padding:.7rem .9rem; }
+  .r-num { font-size:4rem; }
+  .rank-box .rk-val { font-size:2rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-root">
+  <div class="bg-noise"></div>
+  <div class="bg-grad"></div>
+  <div class="bg-mesh"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-badge">🎓 کنکور کارشناسی ارشد روانشناسی</div>
+    <h1>
+      <span class="line1">تخمین رتبه و</span>
+      <span class="line2">میانگین وزنی</span>
+    </h1>
+    <p>گرایش خود را انتخاب کنید، درصد یا تعداد پاسخ‌های خود را وارد کنید تا نتیجه نهایی با ظاهری مدرن محاسبه شود.</p>
+  </div>
+
+  <!-- مراحل (۳ مرحله) -->
+  <div class="steps" id="steps">
+    <div class="sw-wrap active" id="sw1"><div class="sw-circle">۱</div><div class="sw-lbl">گرایش</div></div>
+    <div class="s-line" id="sl1"></div>
+    <div class="sw-wrap" id="sw2"><div class="sw-circle">۲</div><div class="sw-lbl">درصدها</div></div>
+    <div class="s-line" id="sl2"></div>
+    <div class="sw-wrap" id="sw3"><div class="sw-circle">✓</div><div class="sw-lbl">نتیجه</div></div>
+  </div>
+
+  <div id="s1" class="sec">
+    <div class="sec-ttl">انتخاب گرایش</div>
+    <div class="ogrid" id="og"></div>
+  </div>
+
+  <div id="s2" class="sec hidden">
+    <div class="sec-ttl">ورود نمرات</div>
+    <div class="mtog">
+      <button class="mb on" onclick="setMd('pct')" id="mb-p">درصد مستقیم</button>
+      <button class="mb" onclick="setMd('cnt')" id="mb-c">تعداد درست / غلط / نزده</button>
+    </div>
+    <div class="note-box hidden" id="nb">
+      💡 <strong>فرمول نمره خام:</strong> درست − (غلط ÷ ۳) &nbsp;·&nbsp; کل سوالات = درست + غلط + نزده
+    </div>
+    <div class="slist" id="sl"></div>
+    <div class="cbwrap">
+      <button class="cbtn" onclick="calc()">محاسبه دقیق میانگین و رتبه</button>
+    </div>
+  </div>
+
+  <div id="result">
+    <div id="ri"></div>
+    <div class="tc"><button class="rbtn" onclick="resetAll()">↩ محاسبه مجدد</button></div>
+  </div>
+</div>
+
+<script>
+// مبدل اعداد انگلیسی به فارسی
+const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+const toFa = (num) => num.toString().replace(/\d/g, x => farsiDigits[x]);
+
+// داده‌های گرایش‌ها (فقط بالینی و تربیتی)
+const O = [
+  {
+    code: 'کد ضریب ۲',
+    name: 'روانشناسی بالینی',
+    subjects: [
+      {n:'متون روانشناسی', w:2}, {n:'علم‌النفس', w:1}, {n:'آمار و روش تحقیق', w:1}, {n:'روانشناسی مرضی', w:2}, {n:'روانشناسی رشد', w:2}, {n:'روانشناسی بالینی', w:3}, {n:'روانشناسی فیزیولوژیک', w:1}
+    ]
+  },
+  {
+    code: 'کد ضریب ۶',
+    name: 'روانشناسی تربیتی',
+    subjects: [
+      {n:'متون روانشناسی', w:2}, {n:'آمار و روش تحقیق', w:2}, {n:'روانشناسی رشد', w:2}, {n:'روانشناسی عمومی', w:2}, {n:'روانشناسی تربیتی', w:3}
+    ]
+  }
+];
+
+let selGrp=null, md='pct';
+
+const $ = id => document.getElementById(id);
+const sw = n => $('sw'+n);
+const markDone = n => { sw(n).className='sw-wrap done'; sw(n).querySelector('.sw-circle').innerText='✓'; if(n<3) $('sl'+n).className='s-line done'; };
+const markActive = n => { sw(n).className='sw-wrap active'; sw(n).querySelector('.sw-circle').innerText=toFa(n); };
+const markPlain = n => { sw(n).className='sw-wrap'; sw(n).querySelector('.sw-circle').innerText=toFa(n); };
+
+window.onload = () => {
+  sw(1).querySelector('.sw-circle').innerText = toFa(1);
+  sw(2).querySelector('.sw-circle').innerText = toFa(2);
+  sw(3).querySelector('.sw-circle').innerText = '✓';
+  buildO();
+};
+
+function buildO(){
+  const g = $('og'); g.innerHTML = '';
+  O.forEach((grp, gi) => {
+    const b = document.createElement('div'); b.className = 'obtn';
+    b.innerHTML = `<div class="o-code">${grp.code}</div><div class="o-name">${grp.name}</div>`;
+    b.onclick = () => pickO(gi, b);
+    g.appendChild(b);
+  });
+}
+
+function pickO(gi, el){
+  selGrp = O[gi];
+  document.querySelectorAll('.obtn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  markDone(1); markActive(2);
+  buildS(); show('s2'); sc('s2');
+}
+
+function setMd(m){
+  md = m;
+  $('mb-p').classList.toggle('on', m==='pct');
+  $('mb-c').classList.toggle('on', m==='cnt');
+  $('nb').classList.toggle('hidden', m!=='cnt');
+  buildS();
+}
+
+function buildS(){
+  const list = $('sl'); list.innerHTML = '';
+  selGrp.subjects.forEach((s, i) => {
+    const wStr = s.w===3 ? '⭐ ضریب ۳' : s.w===2 ? 'ضریب ۲' : 'ضریب ۱';
+    let inp = md==='pct' ? 
+      `<div class="pctwrap"><input type="number" id="p${i}" placeholder="مثلاً ۶۵" oninput="clp(this)"><span class="pctsym">%</span></div>` : 
+      `<div class="cgrid">
+        <div class="cfield cv"><div class="clabel">درست</div><input type="number" id="c${i}" oninput="upd(${i})"></div>
+        <div class="cfield cw"><div class="clabel">غلط</div><input type="number" id="w${i}" oninput="upd(${i})"></div>
+        <div class="cfield"><div class="clabel">نزده</div><input type="number" id="n${i}" oninput="upd(${i})"></div>
+        <div class="cfield ctot"><div class="clabel">مجموع</div><input type="number" id="t${i}" readonly></div>
+      </div>`;
+    const card = document.createElement('div'); card.className = 'subj'; card.setAttribute('data-w', s.w);
+    card.innerHTML = `<div class="shead"><span class="sname">${s.n}</span><span class="wbadge">${toFa(wStr)}</span></div>${inp}`;
+    list.appendChild(card);
+  });
+}
+
+function clp(el){ const v=parseFloat(el.value); if(v>100)el.value=100; if(v<-100)el.value=-100; }
+function upd(i){ const c=+$('c'+i).value||0, w=+$('w'+i).value||0, n=+$('n'+i).value||0, t=c+w+n; $('t'+i).value = t>0 ? t : ''; }
+
+function calc(){
+  const subs = selGrp.subjects;
+  let tw=0, ws=0; const rows = [];
+  for(let i=0;i<subs.length;i++){
+    const s=subs[i]; let pct=0;
+    if(md==='pct'){
+      const v=$('p'+i).value; pct = v==='' ? 0 : parseFloat(v);
+    } else {
+      const c=+$('c'+i).value||0, w=+$('w'+i).value||0, n=+$('n'+i).value||0, tot=c+w+n;
+      if(tot>0) pct=(c-w/3)/tot*100;
+    }
+    tw+=s.w; ws+=pct*s.w; rows.push({n:s.n, w:s.w, pct});
+  }
+  const avg=ws/tw;
+  markDone(2); markDone(3);
+  renderR(avg, rows, tw);
+  $('result').style.display='block';
+  setTimeout(()=>sc('result'), 120);
+}
+
+function renderR(avg, rows, tw){
+  let h = '';
+  // پنل میانگین
+  h += `<div class="r-hero">
+    <div class="r-label">میانگین وزنی کل</div>
+    <div class="r-num">${toFa(avg.toFixed(2))}</div>
+    <div class="r-unit">درصد</div>
+    <div class="r-meta">مجموع ضرایب: <strong>${toFa(tw)}</strong></div>
+  </div>`;
+
+  // محاسبه رتبه (فقط برای تربیتی - کد 6)
+  if(selGrp.code === 'کد ضریب ۶') {
+    let rank = "";
+    if(avg < 40) {
+      h += `<div class="rank-box na"><div class="rk-lbl">تخمین رتبه بدون سهمیه</div><div class="rk-val">میانگین کمتر از ۴۰</div><div class="rk-sub">متاسفانه کارنامه میانگین‌های کمتر از ۴۰ در دسترس نیست.</div></div>`;
+    } else {
+      if(avg >= 64) rank = "زیر ۱۰ (حدودی)";
+      else if(avg >= 62) rank = "۱۰ تا ۳۸";
+      else if(avg >= 59) rank = "۲۵ تا ۵۵";
+      else if(avg >= 56) rank = "۴۰ تا ۹۰";
+      else if(avg >= 53) rank = "۵۵ تا ۱۰۰";
+      else if(avg >= 50) rank = "۸۰ تا ۱۲۰";
+      else if(avg >= 46) rank = "۹۵ تا ۱۶۵";
+      else if(avg >= 40) rank = "۱۴۰ تا ۳۵۰";
+      
+      h += `<div class="rank-box">
+        <div class="rk-lbl">تخمین رتبه حدودی (بدون سهمیه)</div>
+        <div class="rk-val">${toFa(rank)}</div>
+        <div class="rk-sub">بر اساس کارنامه‌های واقعی کنکور ۱۴۰۴ (رویکرد محتاطانه)</div>
+      </div>`;
+    }
+  } else {
+    h += `<div class="rank-box na"><div class="rk-lbl">تخمین رتبه</div><div class="rk-val">به زودی ...</div><div class="rk-sub">کارنامه‌های این گرایش در حال بررسی هستند.</div></div>`;
+  }
+
+  // جدول دروس
+  h += `<div class="tbl"><div class="tblh"><span>نام درس</span><span class="c-t">ضریب</span><span class="c-t">درصد</span><span class="c-t">سهم وزنی</span></div>`;
+  rows.forEach(r => {
+    const pc = r.pct.toFixed(1);
+    const cls = r.pct>=60?'hi':r.pct>=30?'md':r.pct<0?'ng':'lo';
+    const contrib = ((r.pct*r.w)/tw).toFixed(2);
+    h += `<div class="trow">
+      <span style="font-weight:700">${r.n}</span>
+      <span class="c-t" style="color:var(--t3)">×${toFa(r.w)}</span>
+      <span class="c-t"><span class="pill ${cls}">${toFa(pc)}٪</span></span>
+      <span class="contrib">${toFa(contrib)}</span>
+    </div>`;
+  });
+  h += `</div>`;
+  $('ri').innerHTML = h;
+}
+
+function resetAll(){
+  selGrp=null; md='pct';
+  document.querySelectorAll('.mbtn, .obtn').forEach(b=>b.classList.remove('sel'));
+  hide('s2'); $('result').style.display='none';
+  [1,2,3].forEach(n=>markPlain(n)); markActive(1);
+  ['sl1','sl2'].forEach(id=>$(id).className='s-line');
+  $('mb-p').classList.add('on'); $('mb-c').classList.remove('on'); $('nb').classList.add('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function show(id){ $(id).classList.remove('hidden') }
+function hide(id){ $(id).classList.add('hidden') }
+function sc(id){ $(id).scrollIntoView({behavior:'smooth',block:'nearest'}) }
+</script>
+</body>
+</html>
